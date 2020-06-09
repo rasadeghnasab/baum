@@ -41,8 +41,8 @@ trait Node
     public function newQueryWithoutNestedSetScopes()
     {
         return $this->newQuery()
-                    ->withoutGlobalScope(Scopes\OrderingScope::class)
-                    ->withoutGlobalScope(Scopes\ScopedByScope::class);
+            ->withoutGlobalScope(Scopes\OrderingScope::class)
+            ->withoutGlobalScope(Scopes\ScopedByScope::class);
     }
 
     /**
@@ -86,11 +86,11 @@ trait Node
     }
 
     /**
-    * Returns the level of this node in the tree.
-    * Root level is 0.
-    *
-    * @return int
-    */
+     * Returns the level of this node in the tree.
+     * Root level is 0.
+     *
+     * @return int
+     */
     public function getLevel()
     {
         if (is_null($this->getParentKey())) {
@@ -188,12 +188,13 @@ trait Node
      */
     public function setDepth()
     {
+        $this->refresh();
         $this->getConnection()->transaction(function () {
             $this->refresh();
 
             $level = $this->getLevel();
 
-            $this->newQuery()->where($this->getKeyName(), '=', $this->getKey())->update([$this->getDepthColumnName() => $level]);
+            $this->newQuery()->where($this->getMainKeyName(), '=', $this->getMainKey())->update([$this->getDepthColumnName() => $level]);
             $this->setAttribute($this->getDepthColumnName(), $level);
         });
 
@@ -250,8 +251,8 @@ trait Node
         $lftCol = $grammar->wrap($instance->getQualifiedLeftColumnName());
 
         return $instance->newQuery()
-                    ->whereRaw($rgtCol . ' - ' . $lftCol . ' = 1')
-                    ->orderBy($instance->getQualifiedOrderColumnName());
+            ->whereRaw($rgtCol . ' - ' . $lftCol . ' = 1')
+            ->orderBy($instance->getQualifiedOrderColumnName());
     }
 
     /**
@@ -270,9 +271,9 @@ trait Node
         $lftCol = $grammar->wrap($instance->getQualifiedLeftColumnName());
 
         return $instance->newQuery()
-                    ->whereNotNull($instance->getParentColumnName())
-                    ->whereRaw($rgtCol . ' - ' . $lftCol . ' != 1')
-                    ->orderBy($instance->getQualifiedOrderColumnName());
+            ->whereNotNull($instance->getParentColumnName())
+            ->whereRaw($rgtCol . ' - ' . $lftCol . ' != 1')
+            ->orderBy($instance->getQualifiedOrderColumnName());
     }
 
     /**
@@ -283,7 +284,7 @@ trait Node
      */
     public function scopeWithoutNode($query, $node)
     {
-        return $query->where($node->getKeyName(), '!=', $node->getKey());
+        return $query->where($node->getMainKeyName(), '!=', $node->getMainKey());
     }
 
     /**
@@ -345,7 +346,7 @@ trait Node
         } else {
             $parentId = $this->getParentKey();
 
-            if (!is_null($parentId) && $currentParent = static::find($parentId)) {
+            if (!is_null($parentId) && $currentParent = static::where($this->getMainKeyName(), '=', $parentId)) {
                 return $currentParent->getRoot();
             } else {
                 return $this;
@@ -362,8 +363,8 @@ trait Node
     public function ancestorsAndSelf()
     {
         return $this->newQuery()
-                ->where($this->getLeftColumnName(), '<=', $this->getLeft())
-                ->where($this->getRightColumnName(), '>=', $this->getRight());
+            ->where($this->getLeftColumnName(), '<=', $this->getLeft())
+            ->where($this->getRightColumnName(), '>=', $this->getRight());
     }
 
     /**
@@ -431,7 +432,7 @@ trait Node
     public function siblingsAndSelf()
     {
         return $this->newQuery()
-                ->where($this->getParentColumnName(), $this->getParentKey());
+            ->where($this->getParentColumnName(), $this->getParentKey());
     }
 
     /**
@@ -480,7 +481,7 @@ trait Node
         $lftCol = $grammar->wrap($this->getQualifiedLeftColumnName());
 
         return $this->descendants()
-                ->whereRaw($rgtCol . ' - ' . $lftCol . ' = 1');
+            ->whereRaw($rgtCol . ' - ' . $lftCol . ' = 1');
     }
 
     /**
@@ -508,8 +509,8 @@ trait Node
         $lftCol = $grammar->wrap($this->getQualifiedLeftColumnName());
 
         return $this->descendants()
-                ->whereNotNull($this->getQualifiedParentColumnName())
-                ->whereRaw($rgtCol . ' - ' . $lftCol . ' != 1');
+            ->whereNotNull($this->getQualifiedParentColumnName())
+            ->whereRaw($rgtCol . ' - ' . $lftCol . ' != 1');
     }
 
     /**
@@ -531,8 +532,8 @@ trait Node
     public function descendantsAndSelf()
     {
         return $this->newQuery()
-                ->where($this->getLeftColumnName(), '>=', $this->getLeft())
-                ->where($this->getLeftColumnName(), '<', $this->getRight());
+            ->where($this->getLeftColumnName(), '>=', $this->getLeft())
+            ->where($this->getLeftColumnName(), '<', $this->getRight());
     }
 
     /**
@@ -593,9 +594,9 @@ trait Node
     public function getLeftSibling()
     {
         return $this->siblings()
-                ->where($this->getLeftColumnName(), '<', $this->getLeft())
-                ->orderBy($this->getOrderColumnName(), 'desc')
-                ->first();
+            ->where($this->getLeftColumnName(), '<', $this->getLeft())
+            ->orderBy($this->getOrderColumnName(), 'desc')
+            ->first();
     }
 
     /**
@@ -606,8 +607,8 @@ trait Node
     public function getRightSibling()
     {
         return $this->siblings()
-                ->where($this->getLeftColumnName(), '>', $this->getLeft())
-                ->first();
+            ->where($this->getLeftColumnName(), '>', $this->getLeft())
+            ->first();
     }
 
     /**
@@ -620,13 +621,13 @@ trait Node
         $this->getConnection()->transaction(function () {
             $this->refresh();
 
-            $this->descendantsAndSelf()->select($this->getKeyName())->lockForUpdate()->get();
+            $this->descendantsAndSelf()->select($this->getMainKeyName())->lockForUpdate()->get();
 
             $oldDepth = !is_null($this->getDepth()) ? $this->getDepth() : 0;
 
             $newDepth = $this->getLevel();
 
-            $this->newQuery()->where($this->getKeyName(), '=', $this->getKey())->update([$this->getDepthColumnName() => $newDepth]);
+            $this->newQuery()->where($this->getMainKeyName(), '=', $this->getMainKey())->update([$this->getDepthColumnName() => $newDepth]);
             $this->setAttribute($this->getDepthColumnName(), $newDepth);
 
             $diff = $newDepth - $oldDepth;
@@ -647,7 +648,7 @@ trait Node
     {
         $instance = new static;
 
-        $key = $key ?: $instance->getKeyName();
+        $key = $key ?: $instance->getMainKeyName();
         $depthColumn = $instance->getDepthColumnName();
 
         $nodes = $instance->newQuery()->get()->toArray();

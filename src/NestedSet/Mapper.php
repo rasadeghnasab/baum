@@ -10,9 +10,9 @@ class Mapper
 {
     /**
      * Node instance for reference
-    *
-    * @var \Baum\Node
-    */
+     *
+     * @var \Baum\Node
+     */
     protected $node = null;
 
     /**
@@ -69,7 +69,7 @@ class Mapper
 
         $affectedKeys = [];
 
-        $result = $this->mapTreeRecursive($tree, $this->node->getKey(), $affectedKeys);
+        $result = $this->mapTreeRecursive($tree, $this->node->getMainKey(), $affectedKeys);
 
         if ($result && count($affectedKeys) > 0) {
             $this->deleteUnaffected($affectedKeys);
@@ -115,19 +115,19 @@ class Mapper
 
             $result = $node->save();
 
-            if (! $result) {
+            if (!$result) {
                 return false;
             }
 
-            $affectedKeys[] = $node->getKey();
+            $affectedKeys[] = $node->getMainKey();
 
             if (array_key_exists($this->getChildrenKeyName(), $attributes)) {
                 $children = $attributes[$this->getChildrenKeyName()];
 
                 if (count($children) > 0) {
-                    $result = $this->mapTreeRecursive($children, $node->getKey(), $affectedKeys);
+                    $result = $this->mapTreeRecursive($children, $node->getMainKey(), $affectedKeys);
 
-                    if (! $result) {
+                    if (!$result) {
                         return false;
                     }
                 }
@@ -139,14 +139,14 @@ class Mapper
 
     protected function getSearchAttributes($attributes)
     {
-        $searchable = [$this->node->getKeyName()];
+        $searchable = [$this->node->getMainKeyName()];
 
         return Arr::only($attributes, $searchable);
     }
 
     protected function getDataAttributes($attributes)
     {
-        $exceptions = [$this->node->getKeyName(), $this->getChildrenKeyName()];
+        $exceptions = [$this->node->getMainKeyName(), $this->getChildrenKeyName()];
 
         return Arr::except($attributes, $exceptions);
     }
@@ -173,7 +173,7 @@ class Mapper
 
     protected function deleteUnaffected($keys = [])
     {
-        return $this->pruneScope()->whereNotIn($this->node->getKeyName(), $keys)->delete();
+        return $this->pruneScope()->whereNotIn($this->node->getMainKeyName(), $keys)->delete();
     }
 
     protected function wrapInTransaction(Closure $callback)

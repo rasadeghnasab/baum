@@ -7,9 +7,9 @@ class Builder
 
     /**
      * Node instance for reference
-    *
-    * @var \Baum\Node
-    */
+     *
+     * @var \Baum\Node
+     */
     protected $node;
 
     /**
@@ -106,7 +106,7 @@ class Builder
         // $query = $this->node->newQuery();
         $query = $this->node->newQueryWithoutNestedSetScopes();
 
-        $query->where($this->node->getQualifiedParentColumnName(), '=', $node->getKey());
+        $query->where($this->node->getQualifiedParentColumnName(), '=', $node->getMainKey());
 
         // We must also add the scoped column values to the query to compute valid
         // left and right indexes.
@@ -156,7 +156,7 @@ class Builder
         $output = [];
 
         foreach ($attributes as $fld => $value) {
-            $output[] = $this->node->qualifyColumn($fld).'='.(is_null($value) ? 'NULL' : $value);
+            $output[] = $this->node->qualifyColumn($fld) . '=' . (is_null($value) ? 'NULL' : $value);
         }
 
         // NOTE: Maybe an md5 or something would be better. Should be unique though.

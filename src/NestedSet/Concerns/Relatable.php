@@ -21,7 +21,7 @@ trait Relatable
     */
     public function children()
     {
-        return $this->hasMany(get_class($this), $this->getParentColumnName());
+        return $this->hasMany(get_class($this), $this->getParentColumnName(), $this->getMainKeyName());
     }
 
     // /**

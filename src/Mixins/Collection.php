@@ -26,7 +26,7 @@ class Collection
                 if (!is_null($parentKey) && array_key_exists($parentKey, $dict)) {
                     $dict[$parentKey]->children[] = $node;
 
-                    $nestedKeys[] = $node->getKey();
+                    $nestedKeys[] = $node->getMainKey();
                 }
             }
 

@@ -6,51 +6,51 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Events\Dispatcher;
 
 /**
-* Move
-*/
+ * Move
+ */
 class Move
 {
 
     /**
-    * Node on which the move operation will be performed
-    *
-    * @var \Baum\Node
-    */
+     * Node on which the move operation will be performed
+     *
+     * @var \Baum\Node
+     */
     protected $node;
 
     /**
-    * Destination node
-    *
-    * @var \Baum\Node | int
-    */
+     * Destination node
+     *
+     * @var \Baum\Node | int
+     */
     protected $target;
 
     /**
-    * Move target position, one of: child, left, right or root
-    *
-    * @var string
-    */
+     * Move target position, one of: child, left, right or root
+     *
+     * @var string
+     */
     protected $position;
 
     /**
-    * Memoized 1st boundary.
-    *
-    * @var int
-    */
+     * Memoized 1st boundary.
+     *
+     * @var int
+     */
     protected $_bound1;
 
     /**
-    * Memoized 2nd boundary.
-    *
-    * @var int
-    */
+     * Memoized 2nd boundary.
+     *
+     * @var int
+     */
     protected $_bound2;
 
     /**
-    * Memoized boundaries array.
-    *
-    * @var array
-    */
+     * Memoized boundaries array.
+     *
+     * @var array
+     */
     protected $_boundaries;
 
     /**
@@ -138,7 +138,7 @@ class Move
         $connection = $this->node->getConnection();
         $grammar    = $connection->getQueryGrammar();
 
-        $currentId      = $this->quoteIdentifier($this->node->getKey());
+        $currentId      = $this->quoteIdentifier($this->node->getMainKey());
         $parentId       = $this->quoteIdentifier($this->parentId());
         $leftColumn     = $this->node->getQualifiedLeftColumnName();
         $rightColumn    = $this->node->getQualifiedRightColumnName();
@@ -195,10 +195,10 @@ class Move
                 return $node->refresh();
             }
 
-            return $this->node->newQuery()->find($node->getKey());
+            return $this->node->newQuery()->where($node->getMainKeyName(), '=', $node->getMainKey());
         }
 
-        if ($resolved = $this->node->newQuery()->find($node)) {
+        if ($resolved = $this->node->newQuery()->where($this->node->getMainKeyName(), '=', $node)->get()) {
             return $resolved;
         }
 
@@ -324,7 +324,7 @@ class Move
                 return null;
 
             case 'child':
-                return $this->target->getKey();
+                return $this->target->getMainKey();
 
             default:
                 return $this->target->getParentKey();
@@ -387,7 +387,7 @@ class Move
 
         // Basically the same as \Illuminate\Database\Eloquent\Model->fireModelEvent
         // but we relay the event into the node instance.
-        $event = "eloquent.{$event}: ".get_class($this->node);
+        $event = "eloquent.{$event}: " . get_class($this->node);
 
         $method = $halt ? 'until' : 'dispatch';
 

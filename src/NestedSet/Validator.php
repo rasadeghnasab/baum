@@ -55,7 +55,7 @@ class Validator
         $grammar    = $connection->getQueryGrammar();
 
         $tableName      = $this->node->getTable();
-        $primaryKeyName = $this->node->getKeyName();
+        $primaryKeyName = $this->node->getMainKeyName();
         $parentColumn   = $this->node->getQualifiedParentColumnName();
 
         $lftCol = $grammar->wrap($this->node->getLeftColumnName());
@@ -74,10 +74,10 @@ class Validator
 
         $query = $this->node->newQuery()
             ->join(
-                $connection->raw($grammar->wrapTable($tableName).' AS parent'),
+                $connection->raw($grammar->wrapTable($tableName) . ' AS parent'),
                 $parentColumn,
                 '=',
-                $connection->raw('parent.'.$grammar->wrap($primaryKeyName)),
+                $connection->raw('parent.' . $grammar->wrap($primaryKeyName)),
                 'left outer'
             )
             ->whereRaw($whereStm);
@@ -92,10 +92,8 @@ class Validator
      */
     protected function validateDuplicates()
     {
-        return (
-            !$this->duplicatesExistForColumn($this->node->getQualifiedLeftColumnName()) &&
-            !$this->duplicatesExistForColumn($this->node->getQualifiedRightColumnName())
-        );
+        return (!$this->duplicatesExistForColumn($this->node->getQualifiedLeftColumnName()) &&
+            !$this->duplicatesExistForColumn($this->node->getQualifiedRightColumnName()));
     }
 
     /**
